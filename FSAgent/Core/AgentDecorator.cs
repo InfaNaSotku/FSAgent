@@ -1,4 +1,5 @@
 ﻿using FSAgent.Target;
+using System.ComponentModel;
 
 namespace FSAgent.Core
 {
@@ -11,7 +12,7 @@ namespace FSAgent.Core
         {
             _wrapped_entity = wrapped_entity;
             _target = GetTarget();
-            AddAction(Action);
+            AddAction(Action, TypeDescriptor.GetClassName(this));
         }
 
         protected abstract void Action();
@@ -20,9 +21,9 @@ namespace FSAgent.Core
         {
             return _wrapped_entity.GetTarget();
         }
-        internal override void AddAction(Action action)
+        internal override void AddAction(Action action, string? name)
         {
-            _wrapped_entity.AddAction(action);
+            _wrapped_entity.AddAction(action, name);
         }
         public override void CreateBehavior()
         {

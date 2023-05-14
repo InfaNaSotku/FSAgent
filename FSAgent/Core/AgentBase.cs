@@ -7,12 +7,10 @@ namespace FSAgent.Core
     {
         private List<Behavior<TargetType>> _behaviors;
         private TargetType _target;
-        private List<string> _predicates;
         private Generator<TargetType> _generator;
 
-        public AgentBase(List<string> predicates)
+        public AgentBase()
         {
-            _predicates = predicates;
             _behaviors = new List<Behavior<TargetType>>();
             _target = new TargetType();
             _generator = new Generator<TargetType>(_target, _behaviors);
@@ -23,9 +21,9 @@ namespace FSAgent.Core
         {
             return _target;
         }
-        internal override void AddAction(Action action)
+        internal override void AddAction(Action action, string? name)
         {
-            _behaviors.Add(new Behavior<TargetType>(action: action));
+            _behaviors.Add(new Behavior<TargetType>(action, name));
         }
 
 
@@ -42,7 +40,26 @@ namespace FSAgent.Core
 
         public override void PrintBehavior()
         {
-           
+            foreach(var behavior in _behaviors)
+            {
+                Console.WriteLine($"{behavior._name}:");
+                foreach (var cond in behavior._conditions)
+                {
+                    for (int i = 0; i < _target._predicates.Count(); ++i)
+                    {
+                        Predicate start = _target.
+                        HashToCondition(cond.Key).
+                        _predicates[i];
+                        Predicate end = _target.
+                        HashToCondition(cond.Value).
+                        _predicates[i];
+                        Console.WriteLine($"{start.
+                            _name}={start._state} -> {end.
+                            _name}={end._state}");
+                    }
+                    Console.WriteLine('\n');
+                }
+            }
         }
     }
 }

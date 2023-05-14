@@ -7,7 +7,7 @@ namespace FSAgent.Core
         public abstract void CreateBehavior();
         public abstract void RunBehavior();
         public abstract void PrintBehavior();
-        internal abstract void AddAction(Action action);
+        internal abstract void AddAction(Action action, string? name);
         internal abstract TargetType GetTarget();
     }
 }
