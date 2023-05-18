@@ -3,7 +3,8 @@ using FSAgent.Core;
 
 namespace FSAgent.Core
 {
-    internal class Generator<TargetType> where TargetType : BaseTargetType
+    internal class Generator<TargetType> where
+        TargetType : BaseTargetType
     {
         private TargetType _target;
         private List<Behavior<TargetType>> _behaviors;

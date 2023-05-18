@@ -3,16 +3,23 @@ using System.ComponentModel;
 
 namespace FSAgent.Core
 {
-    public abstract class AgentDecorator<TargetType> : Agent<TargetType> where TargetType : BaseTargetType
+    public abstract class AgentDecorator<TargetType> :
+        Agent<TargetType> where TargetType : BaseTargetType
     {
-        private readonly Agent<TargetType> _wrapped_entity;
+        private Agent<TargetType> _wrapped_entity;
         protected TargetType _target;
 
-        public AgentDecorator(Agent<TargetType> wrapped_entity)
+        public AgentDecorator()
+        {
+        }
+
+        internal AgentDecorator<TargetType>
+            Wrap(Agent<TargetType> wrapped_entity)
         {
             _wrapped_entity = wrapped_entity;
             _target = GetTarget();
             AddAction(Action, TypeDescriptor.GetClassName(this));
+            return this;
         }
 
         protected abstract void Action();

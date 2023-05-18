@@ -3,19 +3,19 @@ using System;
 
 namespace FSAgent.Core
 {
-    public class AgentBase<TargetType> : Agent<TargetType> where TargetType : BaseTargetType, new()
+    public class AgentBase<TargetType> : Agent<TargetType> where
+        TargetType : BaseTargetType, new()
     {
-        private List<Behavior<TargetType>> _behaviors;
-        private TargetType _target;
-        private Generator<TargetType> _generator;
-
+        internal List<Behavior<TargetType>> _behaviors;
+        internal TargetType _target;
+        internal Generator<TargetType> _generator;
+         
         public AgentBase()
         {
             _behaviors = new List<Behavior<TargetType>>();
             _target = new TargetType();
             _generator = new Generator<TargetType>(_target, _behaviors);
         }
-
 
         internal override TargetType GetTarget()
         {

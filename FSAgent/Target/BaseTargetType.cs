@@ -8,6 +8,10 @@ namespace FSAgent.Target
         public BaseTargetType()
         {
             _predicates = new List<Predicate>();
+            _predicates.Add(new Predicate("ISFINISH",
+                false, int.MaxValue));
+            _predicates.Add(new Predicate("ISFAIL",
+                false, int.MinValue));
         }
         public abstract void TargetReset();
         // Calls when agent doesn't know what it should to do
@@ -25,7 +29,6 @@ namespace FSAgent.Target
             }
             return null;
         }
-
 
         internal Condition HashToCondition(int condition_hash)
         {
@@ -48,12 +51,12 @@ namespace FSAgent.Target
         { 
             return condition_hash % 2 == 1 ? true : false;
         }
-        // Considers that fail bit is secod bit
+        // Considers that fail bit is second bit
         internal bool IsFail(Condition condition)
         {
             return condition._predicates[1]._state;
         }
-        // Considers that finish bit is second bit
+        // Considers that fail bit is second bit
         internal bool IsFail(int condition_hash)
         {
             return condition_hash % 4 == 1 ? true : false;
