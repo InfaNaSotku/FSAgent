@@ -17,6 +17,7 @@ namespace FSAgent.Target
         // Calls when agent doesn't know what it should to do
         public abstract void Alarm();
         public abstract Condition GetCondition();
+        public abstract void Log(string body);
 
         public Predicate? FindPredicate(string name)
         {

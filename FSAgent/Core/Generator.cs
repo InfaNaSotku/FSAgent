@@ -25,6 +25,8 @@ namespace FSAgent.Core
         {
             _target = target;
             _behaviors = behaviors;
+            _estimate_deep = 0;
+            _execute_deep = 0;
             IsGenerate = true;
         }
         public void Run()
@@ -32,8 +34,8 @@ namespace FSAgent.Core
             IsGenerate = false;
             if(!Execute())
             {
+                _target.Log("Agent coudn't find right existing chain");
                 _target.Alarm();
-                //log
             }
         }
         public void Create()
@@ -41,12 +43,21 @@ namespace FSAgent.Core
             IsGenerate = true;
             if(!Execute())
             {
-                //log
+                _target.Log("Agent coudn't find the chain");
             }
         }
+
+        private int _estimate_deep;
+        private int _execute_deep;
+
         private int EstimateChain(int cur_hash)
         {
             int reward = 0;
+            if(_estimate_deep > 100)
+            {
+                return 0;
+            }
+            _estimate_deep++;
             foreach (var behavior in _behaviors)
             {
                 if (behavior._conditions.ContainsKey(cur_hash))
@@ -66,11 +77,17 @@ namespace FSAgent.Core
                     }
                 }
             }
+            _estimate_deep--;
             return reward;
         }
         
         private bool Execute()
         {
+            if(_execute_deep > 100)
+            {
+                return false;
+            }
+            _execute_deep++;
             Condition cond = _target.GetCondition();
             if(_target.IsFinish(cond))
             {
@@ -125,11 +142,13 @@ namespace FSAgent.Core
 
                 if(Execute())
                 {
+                    _execute_deep--;
                     return true;
                 }
 
                 _target.TargetReset();
             }
+            _execute_deep--;
             return false;
         }
 

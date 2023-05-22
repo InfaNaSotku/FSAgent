@@ -5,9 +5,17 @@ namespace FSAgent.Core
 
         RTargetType : BaseTargetType, new ()
     {
+       
+
         public AgentReaction() : base()
         {
+            
             //+реализация перехвата и просмотра состояния объекта
+        }
+
+        public bool IsNeedReaction()
+        {
+            return true;
         }
     }
 }

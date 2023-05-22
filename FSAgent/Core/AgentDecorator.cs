@@ -4,13 +4,15 @@ using System.ComponentModel;
 namespace FSAgent.Core
 {
     public abstract class AgentDecorator<TargetType> :
-        Agent<TargetType> where TargetType : BaseTargetType
+        Agent<TargetType> where TargetType : BaseTargetType, new()
     {
         private Agent<TargetType> _wrapped_entity;
         protected TargetType _target;
 
         public AgentDecorator()
         {
+            _target = new TargetType();
+            _wrapped_entity = new Null<TargetType>();
         }
 
         internal AgentDecorator<TargetType>
