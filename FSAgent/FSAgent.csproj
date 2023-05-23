@@ -6,4 +6,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="Core\Agent\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Core\Agent\" />
+  </ItemGroup>
 </Project>

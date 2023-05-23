@@ -1,7 +1,8 @@
 ﻿using FSAgent.Target;
+using FSAgent.Core;
 using System;
 
-namespace FSAgent.Core
+namespace FSAgent.Core.Agent
 {
     public class AgentBase<TargetType> : Agent<TargetType> where
         TargetType : BaseTargetType, new()
@@ -21,7 +22,8 @@ namespace FSAgent.Core
         {
             return _target;
         }
-        internal override void AddAction(Action action, string? name)
+        internal override void AddAction(Func<IEnumerable<int>>
+            action, string? name)
         {
             _behaviors.Add(new Behavior<TargetType>(action, name));
         }

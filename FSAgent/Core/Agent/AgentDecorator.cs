@@ -1,7 +1,8 @@
 ﻿using FSAgent.Target;
+using FSAgent.Core;
 using System.ComponentModel;
 
-namespace FSAgent.Core
+namespace FSAgent.Core.Agent
 {
     public abstract class AgentDecorator<TargetType> :
         Agent<TargetType> where TargetType : BaseTargetType, new()
@@ -12,7 +13,7 @@ namespace FSAgent.Core
         public AgentDecorator()
         {
             _target = new TargetType();
-            _wrapped_entity = new Null<TargetType>();
+            _wrapped_entity = new NullAgent<TargetType>();
         }
 
         internal AgentDecorator<TargetType>
@@ -24,13 +25,13 @@ namespace FSAgent.Core
             return this;
         }
 
-        protected abstract void Action();
+        protected abstract IEnumerable<int> Action();
 
         internal override TargetType GetTarget()
         {
             return _wrapped_entity.GetTarget();
         }
-        internal override void AddAction(Action action, string? name)
+        internal override void AddAction(Func<IEnumerable<int>> action, string? name)
         {
             _wrapped_entity.AddAction(action, name);
         }

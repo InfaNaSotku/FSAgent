@@ -9,6 +9,7 @@ namespace FSAgent.Core
         private TargetType _target;
         private List<Behavior<TargetType>> _behaviors;
         private bool IsGenerate;
+        internal bool IsCancel;
 
         private class Chain
         {
@@ -28,6 +29,7 @@ namespace FSAgent.Core
             _estimate_deep = 0;
             _execute_deep = 0;
             IsGenerate = true;
+            IsCancel = false;
         }
         public void Run()
         {
@@ -50,6 +52,19 @@ namespace FSAgent.Core
         private int _estimate_deep;
         private int _execute_deep;
 
+
+        private void ExecuteAction(Func<IEnumerable<int>> action)
+        {
+            foreach (var movement in action())
+            {
+                if(IsCancel)
+                {
+                    return;
+                }
+            }
+        }
+
+
         private int EstimateChain(int cur_hash)
         {
             int reward = 0;
@@ -60,6 +75,11 @@ namespace FSAgent.Core
             _estimate_deep++;
             foreach (var behavior in _behaviors)
             {
+                // Cancel estimate
+                if (IsCancel)
+                {
+                    return 0;
+                }
                 if (behavior._conditions.ContainsKey(cur_hash))
                 {
                     if(_target.IsFail(behavior._conditions[cur_hash]))
@@ -109,22 +129,34 @@ namespace FSAgent.Core
                 {
                     bes_points.Add(new Chain(0, i));
                 }
+                // Cancel execute
+                if (IsCancel)
+                {
+                    return true;
+                }
             }
             bes_points.Sort((Chain first, Chain second) =>
             second._points.CompareTo(first._points)
             );
             foreach(Chain be_points in bes_points)
             {
-                // Agent doesn't know what it should to do
-                if(be_points._points == 0 &&
-                    !_behaviors[be_points._behavior_pos].
-                        _conditions.ContainsKey(cond_hash) &&
-                        !IsGenerate)
+                // Cancel execute
+                if (IsCancel)
                 {
-                    _target.Alarm();
+                    return true;
                 }
 
-                _behaviors[be_points._behavior_pos].Execute();
+                // Agent doesn't know what it should to do
+                if (be_points._points == 0 &&
+                        !IsGenerate)
+                {
+                    return false;
+                }
+
+                //надо понять виден ли финиш
+
+                ExecuteAction(_behaviors[be_points._behavior_pos].
+                    _action);
 
                 if(!_behaviors[be_points._behavior_pos].
                         _conditions.ContainsKey(cond_hash))
@@ -143,6 +175,19 @@ namespace FSAgent.Core
                 if(Execute())
                 {
                     _execute_deep--;
+                    return true;
+                }
+                else
+                {
+                    if(!IsGenerate)
+                    {
+                        return false;
+                    }
+                }
+
+                // Cancel execute
+                if (IsCancel)
+                {
                     return true;
                 }
 

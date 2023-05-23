@@ -1,6 +1,6 @@
 ﻿using FSAgent.Target;
-
-namespace FSAgent.Core
+using FSAgent.Core;
+namespace FSAgent.Core.Agent
 {
 	public class FunctionAgent<TargetType, RTargetType> where
         TargetType : BaseTargetType, new() where
@@ -52,9 +52,7 @@ namespace FSAgent.Core
 		{
 			while(true)
 			{
-                CancellationTokenSource cancelTokenSource = new CancellationTokenSource();
-                CancellationToken token = cancelTokenSource.Token;
-                Task adaptive_agent_task = new Task(action, token);
+                Task adaptive_agent_task = new Task(action);
 				while (!((AgentReaction<RTargetType>)_agent_reaction).IsNeedReaction())
 				{
 					if(adaptive_agent_task.IsCompleted)
@@ -62,8 +60,10 @@ namespace FSAgent.Core
 						return;
 					}
 				}
-				// здесь должен быть функционал отрубания потока adaptive_agent_task
+				((AgentAdaptive<TargetType>)_agent_adaptive).
+					CancelExecute();
 				_agent_reaction.RunBehavior();
+				adaptive_agent_task.Wait();
             }
 
         }

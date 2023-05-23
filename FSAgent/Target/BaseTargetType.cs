@@ -4,6 +4,7 @@ namespace FSAgent.Target
     public abstract class BaseTargetType
     {
         public readonly List<Predicate> _predicates;
+        
 
         public BaseTargetType()
         {

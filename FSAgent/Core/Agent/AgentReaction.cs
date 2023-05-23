@@ -1,5 +1,6 @@
 ﻿using FSAgent.Target;
-namespace FSAgent.Core
+using FSAgent.Core;
+namespace FSAgent.Core.Agent
 {
 	public class AgentReaction<RTargetType> : AgentBase<RTargetType> where
 
@@ -7,11 +8,7 @@ namespace FSAgent.Core
     {
        
 
-        public AgentReaction() : base()
-        {
-            
-            //+реализация перехвата и просмотра состояния объекта
-        }
+        public AgentReaction() : base() { }
 
         public bool IsNeedReaction()
         {
