@@ -4,21 +4,25 @@ namespace FSAgent.Target
     public abstract class BaseTargetType
     {
         public readonly List<Predicate> _predicates;
-        
+        public object _driver;
 
         public BaseTargetType()
         {
-            _predicates = new List<Predicate>();
-            _predicates.Add(new Predicate("ISFINISH",
-                false, int.MaxValue));
-            _predicates.Add(new Predicate("ISFAIL",
-                false, int.MinValue));
+            _predicates = new List<Predicate>()
+            {
+                new Predicate("ISFINISH",
+                false, int.MaxValue),
+                new Predicate("ISFAIL",
+                false, int.MinValue)
+            };
+            _driver = new object();
         }
         public abstract void TargetReset();
         // Calls when agent doesn't know what it should to do
         public abstract void Alarm();
         public abstract Condition GetCondition();
         public abstract void Log(string body);
+        
 
         public Predicate? FindPredicate(string name)
         {
@@ -62,6 +66,10 @@ namespace FSAgent.Target
         internal bool IsFail(int condition_hash)
         {
             return condition_hash % 4 == 1 ? true : false;
+        }
+        internal void SetDriver<Driver>(Driver driver)
+        {
+            _driver = driver ?? new object();
         }
     }
 }
