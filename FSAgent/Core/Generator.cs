@@ -68,7 +68,7 @@ namespace FSAgent.Core
         private int EstimateChain(int cur_hash)
         {
             int reward = 0;
-            if(_estimate_deep > 100)
+            if(_estimate_deep > 10)
             {
                 return 0;
             }
@@ -153,12 +153,17 @@ namespace FSAgent.Core
                     return false;
                 }
 
-                //надо понять виден ли финиш
+                //надо понять виден ли финиш?
 
                 ExecuteAction(_behaviors[be_points._behavior_pos].
                     _action);
+                if (IsCancel)
+                {
+                    return true;
+                }
 
-                if(!_behaviors[be_points._behavior_pos].
+
+                if (!_behaviors[be_points._behavior_pos].
                         _conditions.ContainsKey(cond_hash))
                 {
                     _behaviors[be_points._behavior_pos].

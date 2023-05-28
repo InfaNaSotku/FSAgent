@@ -12,7 +12,7 @@ namespace FSAgent.Core.Agent
 
         public bool IsNeedReaction()
         {
-            return true;
+            return false;
         }
     }
 }

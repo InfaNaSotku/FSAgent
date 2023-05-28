@@ -1,4 +1,5 @@
-﻿using FSAgent.Core;
+﻿using System;
+using FSAgent.Core;
 namespace FSAgent.Target
 {
     public abstract class BaseTargetType
@@ -22,18 +23,18 @@ namespace FSAgent.Target
         public abstract void Alarm();
         public abstract Condition GetCondition();
         public abstract void Log(string body);
-        
+        public abstract void Start();
 
-        public Predicate? FindPredicate(string name)
+        public int FindPredicate(string name)
         {
-            foreach (Predicate predicate in _predicates)
+            for (int i = 0; i < _predicates.Count(); i++)
             {
-                if(predicate._name == name)
+                if (_predicates[i]._name == name)
                 {
-                    return predicate;
-                }    
+                    return i;
+                }
             }
-            return null;
+            return -1;
         }
 
         internal Condition HashToCondition(int condition_hash)

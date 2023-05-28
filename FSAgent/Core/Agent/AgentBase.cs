@@ -31,6 +31,7 @@ namespace FSAgent.Core.Agent
         internal void SetDriver<Driver>(Driver driver)
         {
             _target.SetDriver(driver);
+            _target.Start();
         }
 
         public override void CreateBehavior()
