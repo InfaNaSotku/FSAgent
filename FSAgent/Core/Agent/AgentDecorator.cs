@@ -47,5 +47,9 @@ namespace FSAgent.Core.Agent
         {
             _wrapped_entity.PrintBehavior();
         }
+        public override void DropTarget()
+        {
+            _wrapped_entity.DropTarget();
+        }
     }
 }

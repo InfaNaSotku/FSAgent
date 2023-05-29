@@ -105,7 +105,7 @@ namespace FSAgent.Core
         {
             if(_execute_deep > 100)
             {
-                return false;
+                //return false;
             }
             _execute_deep++;
             Condition cond = _target.GetCondition();

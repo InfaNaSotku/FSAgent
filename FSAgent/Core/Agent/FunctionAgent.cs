@@ -2,22 +2,21 @@
 using FSAgent.Core;
 namespace FSAgent.Core.Agent
 {
-	public class FunctionAgent<TargetType, RTargetType,
-		Driver> where
+	public class FunctionAgent<TargetType, RTargetType> where
         TargetType : BaseTargetType, new() where
 		RTargetType : BaseTargetType, new()
     {
 		private Agent<TargetType> _agent_adaptive;
 		private Agent<RTargetType> _agent_reaction;
 
-		public FunctionAgent(Driver driver)
+		public FunctionAgent(object driver)
 		{
 			_agent_adaptive = new AgentAdaptive<TargetType>();
 			_agent_reaction = new AgentReaction<RTargetType>();
 			((AgentReaction<RTargetType>)_agent_reaction).
-				SetDriver(driver);
+				PrepareToStart(driver);
             ((AgentAdaptive<TargetType>)_agent_adaptive).
-                SetDriver(driver);
+                PrepareToStart(driver);
         }
 
 		public void UpdateAdaptive<NewMove>() where
@@ -41,6 +40,12 @@ namespace FSAgent.Core.Agent
 		public void CreateAdaptiveBehavior()
 		{
             Execute(_agent_adaptive.CreateBehavior);
+        }
+
+		public void DropTarget()
+		{
+			_agent_adaptive.DropTarget();
+			_agent_reaction.DropTarget();
 		}
 
 		public void CreateReactionBehavior()
@@ -62,7 +67,7 @@ namespace FSAgent.Core.Agent
 				{
 					if(adaptive_agent_task.IsCompleted)
 					{
-						return;
+                        return;
 					}
 				}
 				((AgentAdaptive<TargetType>)_agent_adaptive).

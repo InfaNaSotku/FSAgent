@@ -6,6 +6,8 @@ namespace FSAgent.Core.Agent
     public class NullAgent<TargetType> : Agent<TargetType>
         where TargetType : BaseTargetType, new()
     {
+        public override void DropTarget() { }
+
         public override void CreateBehavior() { }
         public override void RunBehavior() { }
         public override void PrintBehavior() { }
@@ -15,6 +17,8 @@ namespace FSAgent.Core.Agent
     }
     public abstract class Agent<TargetType> where TargetType : BaseTargetType
     {
+        public abstract void DropTarget();
+
         public abstract void CreateBehavior();
         public abstract void RunBehavior();
         public abstract void PrintBehavior();

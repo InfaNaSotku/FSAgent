@@ -28,10 +28,15 @@ namespace FSAgent.Core.Agent
             _behaviors.Add(new Behavior<TargetType>(action, name));
         }
 
-        internal void SetDriver<Driver>(Driver driver)
+        internal void PrepareToStart(object driver)
         {
             _target.SetDriver(driver);
             _target.Start();
+        }
+
+        public override void DropTarget()
+        {
+            _target.Drop();
         }
 
         public override void CreateBehavior()

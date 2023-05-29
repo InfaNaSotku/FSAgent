@@ -24,6 +24,7 @@ namespace FSAgent.Target
         public abstract Condition GetCondition();
         public abstract void Log(string body);
         public abstract void Start();
+        public abstract void Drop();
 
         public int FindPredicate(string name)
         {
@@ -68,7 +69,7 @@ namespace FSAgent.Target
         {
             return condition_hash % 4 == 1 ? true : false;
         }
-        internal void SetDriver<Driver>(Driver driver)
+        internal void SetDriver(object driver)
         {
             _driver = driver ?? new object();
         }
