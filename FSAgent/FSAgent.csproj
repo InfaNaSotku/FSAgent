@@ -7,9 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Core\Agent\" />
+    <None Remove="LogicObjects\" />
+    <None Remove="Agent\" />
+    <None Remove="Agent\Decorator\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Core\Agent\" />
+    <Folder Include="LogicObjects\" />
+    <Folder Include="Agent\" />
+    <Folder Include="Agent\Decorator\" />
   </ItemGroup>
 </Project>

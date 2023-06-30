@@ -1,13 +1,13 @@
-﻿using FSAgent.Target;
-using FSAgent.Core;
+﻿using FSAgent.Agent.Component;
+using FSAgent.LogicObjects;
 using System.ComponentModel;
 
-namespace FSAgent.Core.Agent
+namespace FSAgent.Agent.Decorator
 {
     public abstract class AgentDecorator<TargetType> :
-        Agent<TargetType> where TargetType : BaseTargetType, new()
+        AgentBase<TargetType> where TargetType : BaseTargetType, new()
     {
-        private Agent<TargetType> _wrapped_entity;
+        private AgentBase<TargetType> _wrapped_entity;
         protected TargetType _target;
 
         public AgentDecorator()
@@ -17,7 +17,7 @@ namespace FSAgent.Core.Agent
         }
 
         internal AgentDecorator<TargetType>
-            Wrap(Agent<TargetType> wrapped_entity)
+            Wrap(AgentBase<TargetType> wrapped_entity)
         {
             _wrapped_entity = wrapped_entity;
             _target = GetTarget();
@@ -35,21 +35,34 @@ namespace FSAgent.Core.Agent
         {
             _wrapped_entity.AddAction(action, name);
         }
-        public override void CreateBehavior()
+        internal override void Save(string compound_path,
+            string condition_path)
+        {
+            _wrapped_entity.Save(compound_path,
+                condition_path);
+        }
+        internal override void Import(string compound_path,
+            string condition_path)
+        {
+            _wrapped_entity.Import(compound_path,
+                condition_path);
+        }
+        internal override void CreateBehavior()
         {
             _wrapped_entity.CreateBehavior();
         }
-        public override void RunBehavior()
+        internal override void RunBehavior()
         {
             _wrapped_entity.RunBehavior();
         }
-        public override void PrintBehavior()
+        internal override void PrintBehavior(string name)
         {
-            _wrapped_entity.PrintBehavior();
+            _wrapped_entity.PrintBehavior(name);
         }
-        public override void DropTarget()
+        internal override void DropTarget()
         {
             _wrapped_entity.DropTarget();
         }
     }
 }
+
