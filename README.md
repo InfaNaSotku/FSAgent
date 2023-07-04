@@ -12,3 +12,5 @@ This project is library to create custom functional system agent
 
 2.0.1 - Clear Predicate / Random Generation for 0 point cbains / Behavior 
 Level / Save behavior with ranging by size (default action count)
+
+2.0.2 - Preranging chain estimate by behavior level

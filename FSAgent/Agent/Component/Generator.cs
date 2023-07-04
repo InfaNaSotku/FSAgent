@@ -2,6 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 using FSAgent.LogicObjects;
+using System.Runtime.ExceptionServices;
 
 namespace FSAgent.Agent.Component
 {
@@ -10,7 +11,7 @@ namespace FSAgent.Agent.Component
     {
         private TargetType _target;
         private List<Behavior<TargetType>> _behaviors;
-        private List<Behavior<TargetType>> _reverse_behaviors;
+        private List<Behavior<TargetType>> _leveled_behaviors;
         private bool IsGenerate;
         internal bool IsCancel;
 
@@ -18,7 +19,8 @@ namespace FSAgent.Agent.Component
         {
             _target = new TargetType();
             _behaviors = new List<Behavior<TargetType>>();
-            _reverse_behaviors = new List<Behavior<TargetType>>();
+            // More to less level
+            _leveled_behaviors = new List<Behavior<TargetType>>();
             _estimate_deep = 0;
             IsGenerate = true;
             IsCancel = false;
@@ -29,11 +31,13 @@ namespace FSAgent.Agent.Component
         {
             _target = target;
             _behaviors = behaviors;
-            _reverse_behaviors = new List<Behavior<TargetType>>();
+            _leveled_behaviors = new List<Behavior<TargetType>>();
             foreach (var behavior in _behaviors)
             {
-                _reverse_behaviors.Insert(0, behavior);
+                _leveled_behaviors.Add(behavior);
             }
+            _leveled_behaviors.Sort((Behavior<TargetType> first, Behavior<TargetType> second) =>
+            second.Level.CompareTo(first.Level));
             _estimate_deep = 0;
             IsGenerate = true;
             IsCancel = false;
@@ -76,23 +80,23 @@ namespace FSAgent.Agent.Component
             {
                 return 0;
             }
-            foreach (var r_behavior in _reverse_behaviors)
+            foreach (var l_behavior in _leveled_behaviors)
             {
                 // Cancel estimate
                 if (IsCancel)
                 {
                     return 0;
                 }
-                if (r_behavior._conditions.ContainsKey(cur_condition))
+                if (l_behavior._conditions.ContainsKey(cur_condition))
                 {
-                    if (_target.IsFail(r_behavior._conditions[cur_condition]))
+                    if (_target.IsFail(l_behavior._conditions[cur_condition]))
                     {
                         continue;
                     }
-                    if (_target.IsFinish(r_behavior._conditions[cur_condition]))
+                    if (_target.IsFinish(l_behavior._conditions[cur_condition]))
                         return _target.GetRewardFromCodition(cur_condition);
                     int cur_reward =
-                        EstimateChain(r_behavior._conditions[cur_condition]);
+                        EstimateChain(l_behavior._conditions[cur_condition]);
                     if (cur_reward > reward)
                     {
                         reward = cur_reward;
@@ -199,7 +203,18 @@ namespace FSAgent.Agent.Component
                         GetCompoundBehaviourName();
                     new_behavior._name = name;
                     _behaviors.Add(new_behavior);
-                    _reverse_behaviors.Insert(0, new_behavior);
+                    for (int i = 0; i < _leveled_behaviors.Count; i++)
+                    {
+                        /*
+                         * 10 6 5 3 1
+                         *     | 
+                         *     5
+                         */
+                        if (_leveled_behaviors[i].Level <= new_behavior.Level)
+                        {
+                            _leveled_behaviors.Insert(i, new_behavior); 
+                        }
+                    }
                     _target.UnFreeze();
                 }
             }
@@ -215,7 +230,7 @@ namespace FSAgent.Agent.Component
         {
             List<Tuple<int, int>> rank = new List<Tuple<int, int>>();
             int pos = 0;
-            foreach (var r_behavior in _reverse_behaviors)
+            foreach (var l_behavior in _leveled_behaviors)
             {
 
                 // Cancel execute
@@ -224,7 +239,7 @@ namespace FSAgent.Agent.Component
                     return rank;
                 }
 
-                if (r_behavior._conditions.ContainsKey(condition))
+                if (l_behavior._conditions.ContainsKey(condition))
                 {
                     rank.Add(new Tuple<int, int>(EstimateChain(condition), pos));
                 }
@@ -261,12 +276,12 @@ namespace FSAgent.Agent.Component
             return random_list;
     }
 
-    /*
-     * 0 - return true
-     * 1 - return false
-     * 2 - continue execute
-     */
-    private int CheckSortedBehavior(Tuple<int, int> sorted_behavior,
+        /*
+         * 0 - return true
+         * 1 - return false
+         * 2 - continue execute
+         */
+        private int CheckSortedBehavior(Tuple<int, int> sorted_behavior,
             Condition condition)
         {
             // Cancel execute
