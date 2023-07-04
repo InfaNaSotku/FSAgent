@@ -1,6 +1,7 @@
 ﻿using FSAgent.Agent.Component;
-using FSAgent.LogicObjects;
 using System.ComponentModel;
+using System;
+using System.Collections.Generic;
 
 namespace FSAgent.Agent.Decorator
 {
@@ -26,6 +27,16 @@ namespace FSAgent.Agent.Decorator
         }
 
         protected abstract IEnumerable<int> Action();
+
+        internal override void RefreshGenerator()
+        {
+            _wrapped_entity.RefreshGenerator();
+        }
+
+        internal override void ClearPredicates()
+        {
+            _wrapped_entity.ClearPredicates();
+        }
 
         internal override TargetType GetTarget()
         {

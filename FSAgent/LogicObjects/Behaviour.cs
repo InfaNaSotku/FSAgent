@@ -1,11 +1,16 @@
 ﻿using System.IO;
 using FSAgent.Agent.Component;
-
+using System;
+using System.Collections.Generic;
 namespace FSAgent.LogicObjects
 {
     internal class Behavior<TargetType> where TargetType : BaseTargetType
     {
         internal string? _name;
+        // Count of default action which constited by this behavior
+        public int Size { private set; get; }
+        // Level of action
+        public int Level { private set; get; }
 
         private Queue<Behavior<TargetType>>?
             _compound_action;
@@ -17,7 +22,7 @@ namespace FSAgent.LogicObjects
         // Value - end condition hash
         internal Dictionary<int, int> _conditions;
 
-        internal Behavior(string? name,
+        internal Behavior(string? name = null,
             Queue<Behavior<TargetType>>?
             compound_action = null, Func<IEnumerable<int>>?
             default_action = null)
@@ -31,6 +36,25 @@ namespace FSAgent.LogicObjects
             }
             _name = name;
             _conditions = new Dictionary<int, int>();
+
+            if (_default_action == null)
+            {
+                Size = 1;
+                Level = 1;
+            }
+            else
+            {
+                int max_level = 1;
+                foreach (var behaviour in _compound_action!)
+                {
+                    if (behaviour.Level > max_level)
+                    {
+                        max_level = behaviour.Level;
+                    }
+                    Size += behaviour.Size;
+                }
+                Level = max_level + 1;
+            }
         }
 
         internal IEnumerable<int> Run()

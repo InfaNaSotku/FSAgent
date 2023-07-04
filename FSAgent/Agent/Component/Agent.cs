@@ -1,6 +1,8 @@
 ﻿using System;
+using System.IO;
 using FSAgent.LogicObjects;
-
+using System.Collections.Generic;
+using System.Linq;
 namespace FSAgent.Agent.Component
 {
     internal class Agent<TargetType> : AgentBase<TargetType> where
@@ -14,10 +16,11 @@ namespace FSAgent.Agent.Component
         {
             _behaviors = new List<Behavior<TargetType>>();
             _target = new TargetType();
-            _generator = new Generator<TargetType>(_target, _behaviors);
+            _generator = new Generator<TargetType>();
+            RefreshGenerator();
         }
 
-        private int FindBehavior(string name)
+        private int FindBehaviorFromName(string name)
         {
             int pos = 0;
             foreach (var behavior in _behaviors)
@@ -29,6 +32,12 @@ namespace FSAgent.Agent.Component
                 pos++;
             }
             return -1;
+        }
+
+        internal override void RefreshGenerator()
+        {
+            _generator = new Generator<TargetType>(_target,
+                _behaviors);
         }
 
         internal override TargetType GetTarget()
@@ -62,6 +71,18 @@ namespace FSAgent.Agent.Component
             _generator.Run();
         }
 
+        internal override void ClearPredicates()
+        {
+            _target._predicates.Clear();
+            _target._predicates.Add(Predicate.CreateWithMemorization("ISFINISH",
+                false, int.MaxValue));
+            _target._predicates.Add(new Predicate("ISFAIL",
+                false, int.MinValue));
+            foreach (var behavior in _behaviors)
+            {
+                behavior._conditions.Clear();
+            }
+        }
 
         // Save order is important!!!
         internal override void Save(string compound_path,
@@ -94,7 +115,7 @@ namespace FSAgent.Agent.Component
                      select str)
                     )
                 {
-                    int pos = FindBehavior(elem);
+                    int pos = FindBehaviorFromName(elem);
                     compound_behavior.Enqueue(_behaviors[pos]);
                 }
                 _behaviors.Add(new Behavior<TargetType>(compound_action:
@@ -130,7 +151,7 @@ namespace FSAgent.Agent.Component
                     it++;
                     it %= 2;
                 }
-                _behaviors[FindBehavior(name)].Import(conditions);
+                _behaviors[FindBehaviorFromName(name)].Import(conditions);
             }
         }
 
@@ -154,9 +175,11 @@ namespace FSAgent.Agent.Component
                             GetPredicateState(i, cond.Key);
                             bool end = _target.
                             GetPredicateState(i, cond.Value);
-                            Console.WriteLine($"{_target.
+                            Console.WriteLine(
+                                _target.
                                 _predicates[i].
-                                _name}: {start} -> {end}");
+                                _name
+                            + $": {start} -> {end}");
                         }
                         Console.WriteLine('\n');
                     }

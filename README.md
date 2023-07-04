@@ -9,3 +9,6 @@ This project is library to create custom functional system agent
 1.1.1 - BaseTargetType now has driver, which you can use to interact with task
 
 2.0.0 - Save and import behavior / Compund action (SavePredicate) 
+
+2.0.1 - Clear Predicate / Random Generation for 0 point cbains / Behavior 
+Level / Save behavior with ranging by size (default action count)

@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using FSAgent.LogicObjects;
+using System;
 
 namespace FSAgent.Agent.Component
 {
@@ -12,8 +12,10 @@ namespace FSAgent.Agent.Component
             string condition_path) { }
         internal override void Save(string compound_path,
             string condition_path) { }
+        internal override void RefreshGenerator() { }
         internal override void CreateBehavior() { }
         internal override void RunBehavior() { }
+        internal override void ClearPredicates() { }
         internal override void PrintBehavior(string name) { }
         internal override void AddAction(Func<IEnumerable<int>>
             action, string? name)

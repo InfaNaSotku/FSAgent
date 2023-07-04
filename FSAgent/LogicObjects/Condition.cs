@@ -1,4 +1,5 @@
-﻿namespace FSAgent.LogicObjects
+﻿using System.Collections.Generic;
+namespace FSAgent.LogicObjects
 {
     public class Condition
 	{

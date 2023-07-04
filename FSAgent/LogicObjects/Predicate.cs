@@ -29,7 +29,7 @@
                 state, reward).Memorize();
         }
 
-        internal Predicate Memorize()
+        private Predicate Memorize()
         {
             IsNeedToRemember = true;
             return this;

@@ -1,5 +1,5 @@
 ﻿using FSAgent.LogicObjects;
-
+using System.Collections.Generic;
 namespace FSAgent.Agent.Component
 {
     public abstract class BaseTargetType
@@ -21,6 +21,7 @@ namespace FSAgent.Agent.Component
             };
             _driver = new object();
         }
+
 
         // Reset last movement done by agent
         public abstract void TargetReset();
@@ -51,7 +52,7 @@ namespace FSAgent.Agent.Component
 
         public int FindPredicate(string name)
         {
-            for (int i = 0; i < _predicates.Count(); i++)
+            for (int i = 0; i < _predicates.Count; i++)
             {
                 if (_predicates[i]._name == name)
                 {
