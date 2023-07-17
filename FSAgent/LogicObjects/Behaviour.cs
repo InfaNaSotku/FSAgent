@@ -10,7 +10,7 @@ namespace FSAgent.LogicObjects
         // Count of default action which constited by this behavior
         public int Size { private set; get; }
         // Level of action
-        public int Level { private set; get; }
+        public int Level { internal set; get; }
 
         private Queue<Behavior<TargetType>>?
             _compound_action;
@@ -37,7 +37,7 @@ namespace FSAgent.LogicObjects
             _name = name;
             _conditions = new Dictionary<int, int>();
 
-            if (_default_action == null)
+            if (_default_action != null)
             {
                 Size = 1;
                 Level = 1;
@@ -47,7 +47,7 @@ namespace FSAgent.LogicObjects
                 int max_level = 1;
                 foreach (var behaviour in _compound_action!)
                 {
-                    if (behaviour.Level > max_level)
+                    if (behaviour.Level > max_level && behaviour._name != "NullAction")
                     {
                         max_level = behaviour.Level;
                     }
@@ -111,17 +111,23 @@ namespace FSAgent.LogicObjects
             {
                 output += $" {condition.Key} {condition.Value}";
             }
+            output += "\n";
             File.AppendAllText(path, output);
         }
         // Saves compound action
         internal void SaveCompoundAction(string path)
         {
+            if (_compound_action == null)
+            {
+                return;
+            }
             string output = _name ??
                 "UnknownAction";
             foreach (var name in GetCompoundNames())
             {
                 output += $" {name}";
             }
+            output += "\n";
             File.AppendAllText(path, output);
         }
     }

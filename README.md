@@ -14,3 +14,5 @@ This project is library to create custom functional system agent
 Level / Save behavior with ranging by size (default action count)
 
 2.0.2 - Preranging chain estimate by behavior level
+
+2.0.2.1 - Bug Fix

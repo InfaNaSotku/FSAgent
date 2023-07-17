@@ -1,11 +1,14 @@
 ﻿using FSAgent.LogicObjects;
 using System.Collections.Generic;
+
 namespace FSAgent.Agent.Component
 {
     public abstract class BaseTargetType
     {
         // We need these only for seeing
         public readonly List<Predicate> _predicates;
+
+        public readonly Stack<object> _target_state_stack;
 
         // Accessor between agent and executer
         public object _driver;
@@ -15,16 +18,13 @@ namespace FSAgent.Agent.Component
             _predicates = new List<Predicate>()
             {
                 Predicate.CreateWithMemorization("ISFINISH",
-                false, int.MaxValue),
+                false, (int)1e7),
                 new Predicate("ISFAIL",
                 false, int.MinValue)
             };
             _driver = new object();
+            _target_state_stack = new Stack<object>();
         }
-
-
-        // Reset last movement done by agent
-        public abstract void TargetReset();
 
         // Calls when agent doesn't know what it should to do
         public abstract void Alarm();
@@ -50,6 +50,23 @@ namespace FSAgent.Agent.Component
         // Should to unfreeze learning platform
         public abstract void UnFreeze();
 
+        // Set last movement done by agent
+        public abstract void SetPreviousTargetState(object previous_state);
+
+        // Get last movement done by agent
+        public abstract object GetPreviousTargetState();
+
+        // Save last movement done by agent
+        public void TargetSave()
+        {
+            _target_state_stack.Push(GetPreviousTargetState());
+        }
+
+        // Reset last movement done by agent
+        public void TargetReset()
+        {
+            SetPreviousTargetState(_target_state_stack.Pop());
+        }
         public int FindPredicate(string name)
         {
             for (int i = 0; i < _predicates.Count; i++)
@@ -65,15 +82,10 @@ namespace FSAgent.Agent.Component
         internal bool GetPredicateState(int
             position, Condition condition)
         {
-            int pow = 2;
-            for (int i = 0; i < position; i++)
-            {
-                pow *= 2;
-            }
-            return condition % pow == 1 ? true : false;
+            return (condition & (1 << (position))) != 0;
         }
 
-        internal int GetRewardFromCodition(Condition condition)
+        internal int GetRewardFromCondition(Condition condition)
         {
             int pos = 0;
             int reward = 0;
@@ -83,6 +95,10 @@ namespace FSAgent.Agent.Component
                     condition))
                 {
                     reward += _predicates[pos]._reward;
+                }
+                if (reward >= 1e7)
+                {
+                    return (int)1e7;
                 }
                 pos++;
             }
@@ -97,7 +113,7 @@ namespace FSAgent.Agent.Component
         // Considers that fail bit is second bit
         internal bool IsFail(Condition condition)
         {
-            return condition % 4 == 1 ? true : false;
+            return GetPredicateState(1, condition);
         }
 
         internal bool IsNeedToRemember(Condition condition)

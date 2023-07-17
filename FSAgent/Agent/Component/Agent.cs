@@ -20,20 +20,6 @@ namespace FSAgent.Agent.Component
             RefreshGenerator();
         }
 
-        private int FindBehaviorFromName(string name)
-        {
-            int pos = 0;
-            foreach (var behavior in _behaviors)
-            {
-                if (behavior._name == name)
-                {
-                    return pos;
-                }
-                pos++;
-            }
-            return -1;
-        }
-
         internal override void RefreshGenerator()
         {
             _generator = new Generator<TargetType>(_target,
@@ -47,8 +33,15 @@ namespace FSAgent.Agent.Component
         internal override void AddAction(Func<IEnumerable<int>>
             action, string? name)
         {
-            _behaviors.Add(new Behavior<TargetType>(name,
-                default_action : action));
+            if (_generator.FindBehaviorFromName(name!) == -1)
+            {
+                _behaviors.Add(new Behavior<TargetType>(name,
+                default_action: action));
+                if (name == "NullAction")
+                {
+                    _behaviors[_behaviors.Count - 1].Level = (int)1e7;
+                }
+            }
         }
 
         internal void PrepareToStart(object driver)
@@ -115,7 +108,7 @@ namespace FSAgent.Agent.Component
                      select str)
                     )
                 {
-                    int pos = FindBehaviorFromName(elem);
+                    int pos = _generator.FindBehaviorFromName(elem);
                     compound_behavior.Enqueue(_behaviors[pos]);
                 }
                 _behaviors.Add(new Behavior<TargetType>(compound_action:
@@ -135,9 +128,9 @@ namespace FSAgent.Agent.Component
                 int key = 0, value = 0;
                 foreach (var elem in
                     (from symbol in str_behaviour.Split(' ')
-                     where symbol.Count() == 1
-                     select ((short)symbol.First()))
-                    )
+                     where symbol != name
+                     select (Convert.ToInt32(symbol))
+                    ))
                 {
                     if (it == 0)
                     {
@@ -151,7 +144,7 @@ namespace FSAgent.Agent.Component
                     it++;
                     it %= 2;
                 }
-                _behaviors[FindBehaviorFromName(name)].Import(conditions);
+                _behaviors[_generator.FindBehaviorFromName(name)].Import(conditions);
             }
         }
 

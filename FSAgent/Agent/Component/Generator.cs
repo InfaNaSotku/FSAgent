@@ -3,6 +3,8 @@ using System.IO;
 using System.Collections.Generic;
 using FSAgent.LogicObjects;
 using System.Runtime.ExceptionServices;
+using System.Linq;
+using System.ComponentModel;
 
 namespace FSAgent.Agent.Component
 {
@@ -22,9 +24,11 @@ namespace FSAgent.Agent.Component
             // More to less level
             _leveled_behaviors = new List<Behavior<TargetType>>();
             _estimate_deep = 0;
+            _execute_deep = 0;
             IsGenerate = true;
             IsCancel = false;
-            _chain = new Queue<int>();
+            _chain = new Stack<int>();
+            _start_condition = new Condition(0);
         }
 
         public Generator(TargetType target, List<Behavior<TargetType>> behaviors)
@@ -39,9 +43,11 @@ namespace FSAgent.Agent.Component
             _leveled_behaviors.Sort((Behavior<TargetType> first, Behavior<TargetType> second) =>
             second.Level.CompareTo(first.Level));
             _estimate_deep = 0;
+            _execute_deep = 0;
             IsGenerate = true;
             IsCancel = false;
-            _chain = new Queue<int>();
+            _chain = new Stack<int>();
+            _start_condition = new Condition(0);
         }
 
         public void Run()
@@ -50,11 +56,19 @@ namespace FSAgent.Agent.Component
             {
                 throw new InvalidOperationException();
             }
+            if (FindBehaviorFromName("NullAction") == -1)
+            {
+                //throw new InvalidOperationException();
+            }
             IsGenerate = false;
             if (!Execute())
             {
                 _target.Log("Agent coudn't find right existing chain");
                 _target.Alarm();
+            }
+            else
+            {
+                _target.Log("Agent successfuly found right chain");
             }
         }
         public void Create()
@@ -63,20 +77,28 @@ namespace FSAgent.Agent.Component
             {
                 throw new InvalidOperationException();
             }
+            if (FindBehaviorFromName("NullAction") == -1)
+            {
+                //throw new InvalidOperationException();
+            }
             IsGenerate = true;
             if (!Execute())
             {
                 _target.Log("Agent coudn't find the chain");
             }
+            else
+            {
+                _target.Log("Agent successfuly found right chain");
+            }
         }
 
         private int _estimate_deep;
-
+        private int _execute_deep;
 
         private int EstimateChain(Condition cur_condition)
         {
             int reward = 0;
-            if (_estimate_deep > 10)
+            if (_estimate_deep > 5)
             {
                 return 0;
             }
@@ -94,9 +116,11 @@ namespace FSAgent.Agent.Component
                         continue;
                     }
                     if (_target.IsFinish(l_behavior._conditions[cur_condition]))
-                        return _target.GetRewardFromCodition(cur_condition);
+                        return _target.GetRewardFromCondition(l_behavior._conditions[cur_condition]);
+                    _estimate_deep++;
                     int cur_reward =
                         EstimateChain(l_behavior._conditions[cur_condition]);
+                    _estimate_deep--;
                     if (cur_reward > reward)
                     {
                         reward = cur_reward;
@@ -107,21 +131,22 @@ namespace FSAgent.Agent.Component
         }
 
         // Current compound of actions
-        private Queue<int> _chain;
+        private Stack<int> _chain;
 
+        private Condition _start_condition;
 
         private Queue<Behavior<TargetType>> CloneChain()
         {
             Queue<Behavior<TargetType>> clone =
                 new Queue<Behavior<TargetType>>();
-            foreach(var pos in _chain)
+            foreach(var pos in _chain.Reverse())
             {
-                clone.Enqueue(_behaviors[pos]);
+                clone.Enqueue(_leveled_behaviors[pos]);
             }
                return clone;
         }
 
-        private int FindCompoundBehaviorFromCond(Condition condition)
+        private int FindCompoundBehaviorFromCond(Condition start_cond, Condition end_cond)
         {
             int pos = 0;
             // We try to find behavior with end condition equal current condition
@@ -138,7 +163,7 @@ namespace FSAgent.Agent.Component
                 }
                 foreach(var cond in behavior._conditions)
                 {
-                    if(cond.Value == condition)
+                    if(cond.Value == end_cond && cond.Key == start_cond)
                     {
                         return pos;
                     }
@@ -148,10 +173,29 @@ namespace FSAgent.Agent.Component
             return -1;
         }
 
+        internal int FindBehaviorFromName(string name)
+        {
+            int pos = 0;
+            foreach (var behavior in _behaviors)
+            {
+                if (behavior._name == name)
+                {
+                    return pos;
+                }
+                pos++;
+            }
+            return -1;
+        }
+
         private void ExecuteAction(IEnumerable<int> action)
         {
+            if (IsGenerate)
+            {
+                _target.TargetSave();
+            }
             foreach (var movement in action)
             {
+
                 if (IsCancel)
                 {
                     return;
@@ -182,7 +226,7 @@ namespace FSAgent.Agent.Component
             if (IsGenerate &&
                 _target.IsNeedToRemember(condition))
             {
-                int find_pos = FindCompoundBehaviorFromCond(condition);
+                int find_pos = FindCompoundBehaviorFromCond(_start_condition, condition);
                 Behavior<TargetType> new_behavior =
                     new Behavior<TargetType>(compound_action:
                     CloneChain());
@@ -201,7 +245,17 @@ namespace FSAgent.Agent.Component
                     string name =
                         _target.
                         GetCompoundBehaviourName();
+                    int number = 1;
+                    while (FindBehaviorFromName(name) != -1)
+                    {
+                        string temp = name.Replace("_" + (number - 1).ToString(), "_" + number.ToString());
+                        if (temp == name)
+                        {
+                            name += ("_" + number.ToString());
+                        }
+                    }
                     new_behavior._name = name;
+                    new_behavior._conditions.Add(_start_condition, condition);
                     _behaviors.Add(new_behavior);
                     for (int i = 0; i < _leveled_behaviors.Count; i++)
                     {
@@ -212,7 +266,8 @@ namespace FSAgent.Agent.Component
                          */
                         if (_leveled_behaviors[i].Level <= new_behavior.Level)
                         {
-                            _leveled_behaviors.Insert(i, new_behavior); 
+                            _leveled_behaviors.Insert(i, new_behavior);
+                            break;
                         }
                     }
                     _target.UnFreeze();
@@ -239,19 +294,45 @@ namespace FSAgent.Agent.Component
                     return rank;
                 }
 
-                if (l_behavior._conditions.ContainsKey(condition))
+                if (l_behavior._conditions.ContainsKey(condition) && !_target.IsFail(l_behavior._conditions[condition]))
                 {
-                    rank.Add(new Tuple<int, int>(EstimateChain(condition), pos));
+                    int reward = _target.GetRewardFromCondition(l_behavior._conditions[condition]);
+                    reward += EstimateChain(l_behavior._conditions[condition]);
+                    if (reward > 1e7)
+                    {
+                        reward = (int)1e7;
+                    }
+                    rank.Add(new Tuple<int, int>(reward, pos));
                 }
                 else
                 {
                     rank.Add(new Tuple<int, int>(0, pos));
                 }
-
+                pos++;
             }
 
             rank.Sort((Tuple<int, int> first, Tuple<int, int> second) =>
-            second.Item1.CompareTo(first.Item1));
+            {
+                if (first.Item1 > second.Item1)
+                {
+                    return -1;
+                }
+                if (second.Item1 > first.Item1)
+                {
+                    return 1;
+                }
+                if (_leveled_behaviors[first.Item2].Level > 
+                _leveled_behaviors[second.Item2].Level)
+                {
+                    return -1;
+                }
+                if (_leveled_behaviors[second.Item2].Level >
+                _leveled_behaviors[first.Item2].Level)
+                {
+                    return 1;
+                }
+                return 0;
+            });
             return rank;
         }
 
@@ -296,7 +377,7 @@ namespace FSAgent.Agent.Component
                 return 0;
             }
 
-            ExecuteAction(_behaviors[sorted_behavior.Item2].Run());
+            ExecuteAction(_leveled_behaviors[sorted_behavior.Item2].Run());
 
             // Cancel execute
             if (IsCancel)
@@ -304,32 +385,32 @@ namespace FSAgent.Agent.Component
                 return 0;
             }
 
-            if (!_behaviors[sorted_behavior.Item2].
+            if (!_leveled_behaviors[sorted_behavior.Item2].
                     _conditions.ContainsKey(condition))
             {
-                _behaviors[sorted_behavior.Item2].
+                _leveled_behaviors[sorted_behavior.Item2].
                     _conditions.Add(condition,
                     _target.GetCurrentCondition());
             }
             else
             {
-                _behaviors[sorted_behavior.Item2].
+                _leveled_behaviors[sorted_behavior.Item2].
                     _conditions[condition] = _target.
                     GetCurrentCondition();
             }
 
-            _chain.Enqueue(sorted_behavior.Item2);
+            _chain.Push(sorted_behavior.Item2);
 
             if (Execute())
             {
-                _chain.Dequeue();
+                _chain.Pop();
                 return 0;
             }
             else
             {
                 if (!IsGenerate)
                 {
-                    _chain.Dequeue();
+                    _chain.Pop();
                     return 1;
                 }
             }
@@ -341,8 +422,9 @@ namespace FSAgent.Agent.Component
             {
                 return 0;
             }
-
             _target.TargetReset();
+            _chain.Pop();
+
             return 2;
         }
 
@@ -356,7 +438,7 @@ namespace FSAgent.Agent.Component
                 {
                     break;
                 }
-                int state = CheckSortedBehavior(sorted_behavior, condition);
+                    int state = CheckSortedBehavior(sorted_behavior, condition);
                 switch (state)
                 {
                     case 0:
@@ -365,11 +447,19 @@ namespace FSAgent.Agent.Component
                         return false;
                 }
                 pos++;
+
             }
 
             // [left, right)
             List<int> random_positions = GetRandomIndexList(pos, rank.Count);
+            // Levels sort
+            random_positions.Sort((int first, int second) =>
+            {
 
+                return _leveled_behaviors[rank[second].Item2].Level.
+                    CompareTo(_leveled_behaviors[rank[first].Item2].Level);
+            });
+            
             foreach (var rand_pos in random_positions)
             {
                 int state = CheckSortedBehavior(rank[rand_pos], condition);
@@ -383,36 +473,45 @@ namespace FSAgent.Agent.Component
                 pos++;
             }
 
-            _chain.Dequeue();
             return false;
         }
 
+
+
         private bool Execute()
         {
+            _execute_deep++;
+
             // Cancel execute
             if (IsCancel)
             {
+                _execute_deep--;
                 return true;
             }
 
             Condition cur_cond =
                 _target.GetCurrentCondition();
-
+            if (_execute_deep == 1)
+            {
+                _start_condition = cur_cond;
+            }
             int state = CheckCondition(cur_cond);
             switch (state)
             {
                 case 0:
+                    _execute_deep--;
                     return true;
                 case 1:
+                    _execute_deep--;
                     return false;
             }
-
             // Sorted rank list the all of behaviors
             // Item1 - points, Item2 - coresponding behavior pos
             List<Tuple<int, int>> rank = GetBehaviorRank(cur_cond);
-
+            bool rezult = CheckSortedBehaviors(rank, cur_cond);
+            _execute_deep--;
             // Checks sorted behavior list and execute
-            return CheckSortedBehaviors(rank, cur_cond);
+            return rezult;
         }
     }   
 }
